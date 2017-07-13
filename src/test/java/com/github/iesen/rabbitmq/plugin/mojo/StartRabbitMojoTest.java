@@ -1,7 +1,16 @@
 package com.github.iesen.rabbitmq.plugin.mojo;
 
-import com.github.iesen.rabbitmq.plugin.mojo.StartRabbitMojo;
-import com.google.common.collect.Lists;
+import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.powermock.api.mockito.PowerMockito.mockStatic;
+import static org.powermock.api.mockito.PowerMockito.when;
+
+import java.util.List;
+
 import org.apache.maven.plugin.logging.Log;
 import org.junit.Before;
 import org.junit.Test;
@@ -9,27 +18,24 @@ import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
+
 import com.github.iesen.rabbitmq.plugin.RabbitManagerFactory;
 import com.github.iesen.rabbitmq.plugin.api.RabbitMQRestClient;
 import com.github.iesen.rabbitmq.plugin.manager.RabbitManager;
 import com.github.iesen.rabbitmq.plugin.mojo.parameter.Exchange;
 import com.github.iesen.rabbitmq.plugin.mojo.parameter.Queue;
-
-import java.util.List;
-
-import static org.mockito.Matchers.anyBoolean;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.*;
-import static org.powermock.api.mockito.PowerMockito.mockStatic;
-import static org.powermock.api.mockito.PowerMockito.when;
+import com.google.common.collect.Lists;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({RabbitManagerFactory.class, StartRabbitMojo.class})
+@PrepareForTest({ RabbitManagerFactory.class, StartRabbitMojo.class })
 public class StartRabbitMojoTest {
 
     private RabbitManager manager;
+
     private Log log;
+
     private StartRabbitMojo mojo;
+
     private RabbitMQRestClient rabbitMQRestClient;
 
     @Before
@@ -46,6 +52,7 @@ public class StartRabbitMojoTest {
         mojo = new StartRabbitMojo();
         mojo.setLog(log);
         mojo.setRabbitMQRestClient(rabbitMQRestClient);
+
     }
 
     @Test
@@ -58,7 +65,7 @@ public class StartRabbitMojoTest {
         verify(manager).rabbitExtracted();
         verify(manager).extractServer();
         verify(manager).isErlangInstalled();
-        verify(manager).isRabbitRunning();
+        verify(manager, times(2)).isRabbitRunning();
         verify(manager).start(anyString(), anyBoolean());
         verifyNoMoreInteractions(manager);
     }
@@ -73,7 +80,7 @@ public class StartRabbitMojoTest {
         verify(manager).rabbitExtracted();
         verify(manager).isErlangInstalled();
         verify(manager).installErlang();
-        verify(manager).isRabbitRunning();
+        verify(manager, times(2)).isRabbitRunning();
         verify(manager).start(anyString(), anyBoolean());
         Mockito.verifyNoMoreInteractions(manager);
     }
@@ -81,13 +88,13 @@ public class StartRabbitMojoTest {
     @Test
     public void whenRabbitIsRunningStopsFirst() throws Exception {
         // Fixture
-        when(manager.isRabbitRunning()).thenReturn(true);
+        when(manager.isRabbitRunning()).thenReturn(true, false);
         // Execute
         mojo.execute();
         // Assert
         verify(manager).rabbitExtracted();
         verify(manager).isErlangInstalled();
-        verify(manager).isRabbitRunning();
+        verify(manager, times(2)).isRabbitRunning();
         verify(manager).stop();
         verify(manager).start(anyString(), anyBoolean());
         Mockito.verifyNoMoreInteractions(manager);

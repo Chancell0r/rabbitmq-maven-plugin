@@ -6,15 +6,19 @@ A maven plugin that downloads, install and configures a RabbitMQ instance within
 
 ## Example Usage
 
-Below is an example configuration for the plugin. You can add exchanges, queues and their binding in the configuration section.
+Below is an example configuration for the plugin. You can specify the port, rabbitmq version, rabbit mq install directory, and if you would like rabbitmq removed on stop. You can add exchanges, queues and their binding in the configuration section.
 
 ```xml
 <plugin>
-    <groupId>com.github.iesen</groupId>
+    <groupId>com.github.kohlsj</groupId>
     <artifactId>rabbitmq-maven-plugin</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
+    <version>0.1.10</version>
     <configuration>
         <detached>true</detached>
+        <port>5672</port>
+        <installDirectory>target/rabbitmq</installDirectory>
+        <cleanUpRabbit>true</cleanUpRabbit>
+        <version>3.6.9</version>
         <exchanges>
             <exchange>
                 <name>myexchange</name>
@@ -35,10 +39,17 @@ Below is an example configuration for the plugin. You can add exchanges, queues 
     </configuration>
 </plugin>
 ```
+##Configuration Values:
+
+installDirectory : default is ~/.rabbitmq_maven_plugin (.rabbitmq_maven_plugin will append to the installDirectory if specified) <br>
+cleanUpRabbit : will remove directory specified by installDirectory + .rabbitmq_maven_plugin<br>
+port : specify the port that rabbitmq will be ran on.<br>
+version : rabbitMq version. <br>
+alwaysRestart : if rmq is already running this specifies whether or not to restart during mvn rabbitmq:start
 
 ##More Information
 
-The plugin first checks if RabbitMQ is installed by this plugin before. If not, installs RabbitMQ to the home folder.
+The plugin first checks if RabbitMQ is installed at the specified directory before, if not then it will install it
 (also installs Erlang runtime if OS is Windows). Just after installation it enables the management plugin and applies
 the settings specified in the plugin configuration.
 
@@ -46,7 +57,7 @@ the settings specified in the plugin configuration.
 
 Windows and Mac OS is supported.
 
-Linux is supported but withouth erlang support.
+Linux is supported but without erlang support.
 
 
 

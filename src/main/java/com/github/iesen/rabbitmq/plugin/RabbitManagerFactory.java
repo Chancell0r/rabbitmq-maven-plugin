@@ -1,8 +1,9 @@
 package com.github.iesen.rabbitmq.plugin;
 
-import com.github.iesen.rabbitmq.plugin.manager.LinuxRabbitManager;
 import org.apache.commons.lang3.SystemUtils;
 import org.apache.maven.plugin.logging.Log;
+
+import com.github.iesen.rabbitmq.plugin.manager.LinuxRabbitManager;
 import com.github.iesen.rabbitmq.plugin.manager.MacRabbitManager;
 import com.github.iesen.rabbitmq.plugin.manager.RabbitManager;
 import com.github.iesen.rabbitmq.plugin.manager.WindowsRabbitManager;

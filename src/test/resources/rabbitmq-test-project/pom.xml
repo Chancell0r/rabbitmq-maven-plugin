@@ -2,9 +2,9 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.github.iesen</groupId>
+    <groupId>com.github.kohlsj</groupId>
     <artifactId>rabbitmq-maven-plugin-test</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>0.1.10</version>
     <packaging>jar</packaging>
 
     <name>RabbitMQ Maven Plugin Test Project</name>
@@ -16,10 +16,14 @@
     <build>
         <plugins>
             <plugin>
-                <groupId>com.github.iesen</groupId>
+                <groupId>com.github.kohlsj</groupId>
                 <artifactId>rabbitmq-maven-plugin</artifactId>
-                <version>0.1.0-SNAPSHOT</version>
+                <version>0.1.10</version>
                 <configuration>
+                    <version>3.6.9</version>
+                    <port>5672</port>
+                    <installDirectory>rabbitMq/</installDirectory>
+                    <cleanUpRabbit>true</cleanUpRabbit>
                     <detached>true</detached>
                 </configuration>
             </plugin>
