@@ -1,66 +1,59 @@
 package com.github.iesen.rabbitmq.plugin.manager;
 
-import static com.github.iesen.rabbitmq.plugin.RabbitMQConstants.RABBITMQ_HOME;
-import static com.github.iesen.rabbitmq.plugin.RabbitMQConstants.RABBITMQ_PARENT_DIR;
-import static com.github.iesen.rabbitmq.plugin.RabbitMQConstants.RABBITMQ_VERSION;
+import java.io.File;
+import java.io.IOException;
 
-import com.google.common.collect.Lists;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.Log;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.List;
+import com.github.iesen.rabbitmq.plugin.RabbitMQConstants;
 
 /**
  */
 public class LinuxRabbitManager extends MacRabbitManager {
 
     private static final int BUFFER = 2048;
+
     private final Log log;
 
-    public LinuxRabbitManager(Log log) {
+    public LinuxRabbitManager(final Log log) {
         super(log);
         this.log = log;
     }
 
     @Override
-    public boolean rabbitExtracted() {
-        File rabbitHome = new File(RABBITMQ_HOME);
-        log.info("Checking " + rabbitHome.getAbsolutePath());
-        boolean exists = rabbitHome.exists();
-        log.info("RabbitMQ " + (exists ? "found" : "not found"));
-        return exists;
-    }
-
-    @Override
     public void extractServer() throws MojoExecutionException {
         try {
-            String rabbitDownloadUrl = "https://www.rabbitmq.com/releases/rabbitmq-server/v" + RABBITMQ_VERSION +
-               "/rabbitmq-server-generic-unix-" + RABBITMQ_VERSION + ".tar.xz";
+            final RabbitMQConstants rabbitMQConstants = RabbitMQConstants.getInstance();
+            final String rabbitDownloadUrl =
+                    "https://www.rabbitmq.com/releases/rabbitmq-server/v" + rabbitMQConstants.getRabbitMqVersion() +
+                    "/rabbitmq-server-generic-unix-" + rabbitMQConstants.getRabbitMqVersion() + ".tar.xz";
             log.debug("Downloading rabbitmq from " + rabbitDownloadUrl);
-            FileUtils.download(rabbitDownloadUrl, RABBITMQ_PARENT_DIR + File.separator + "rabbitmq-server-mac-standalone-" + RABBITMQ_VERSION + ".tar.xz");
+            FileUtils.download(rabbitDownloadUrl,
+                    rabbitMQConstants.getRabbitMqParentDir() + File.separator + "rabbitmq-server-mac-standalone-" +
+                    rabbitMQConstants.getRabbitMqVersion() + ".tar.xz");
             log.debug("Extracting downloaded files");
-            FileUtils.extractTarXz(RABBITMQ_PARENT_DIR + File.separator + "rabbitmq-server-mac-standalone-" + RABBITMQ_VERSION + ".tar.xz", RABBITMQ_PARENT_DIR);
+            FileUtils.extractTarXz(
+                    rabbitMQConstants.getRabbitMqParentDir() + File.separator + "rabbitmq-server-mac-standalone-" +
+                    rabbitMQConstants.getRabbitMqVersion() + ".tar.xz", rabbitMQConstants.getRabbitMqParentDir());
             // Give permissions
-            ProcessBuilder permissionProcess = new ProcessBuilder("/bin/chmod", "-R", "777", RABBITMQ_PARENT_DIR);
+            final ProcessBuilder permissionProcess = new ProcessBuilder("/bin/chmod", "-R", "777", rabbitMQConstants.getRabbitMqParentDir());
             log.debug("Permission command " + permissionProcess.command());
-            Process permission = permissionProcess.start();
+            final Process permission = permissionProcess.start();
             permission.waitFor();
             // Enable management
-            ProcessBuilder managementEnabler = new ProcessBuilder(RABBITMQ_HOME + File.separator + "sbin" + File.separator + "rabbitmq-plugins", "enable", "rabbitmq_management");
+            final ProcessBuilder managementEnabler = new ProcessBuilder(
+                    rabbitMQConstants.getRabbitMqHome() + File.separator + "sbin" + File.separator +
+                    "rabbitmq-plugins", "enable", "rabbitmq_management");
             log.debug("Enable management " + managementEnabler.command());
-            Process mgmt = managementEnabler.start();
+            final Process mgmt = managementEnabler.start();
             mgmt.waitFor();
-        } catch (IOException e) {
+        } catch (final IOException e) {
             throw new MojoExecutionException("Error extracting server", e);
-        } catch (InterruptedException e) {
+        } catch (final InterruptedException e) {
             throw new MojoExecutionException("Error executing process", e);
         }
     }
-
 
     @Override
     public void installErlang() throws MojoExecutionException {
@@ -69,15 +62,15 @@ public class LinuxRabbitManager extends MacRabbitManager {
 
     @Override
     public boolean isErlangInstalled() throws MojoExecutionException {
-        ProcessBuilder permissionProcess = new ProcessBuilder("erl","-version");
+        final ProcessBuilder permissionProcess = new ProcessBuilder("erl", "-version");
         log.debug("Erlang version command " + permissionProcess.command());
         Process permission = null;
         try {
             permission = permissionProcess.start();
             permission.waitFor();
-        } catch (IOException e) {
+        } catch (final IOException e) {
             throw new MojoExecutionException("Erlang is not installed", e);
-        } catch (InterruptedException e){
+        } catch (final InterruptedException e) {
             throw new MojoExecutionException("Erlang is not installed", e);
         }
         return true;

@@ -10,6 +10,8 @@ public interface RabbitManager {
 
     void extractServer() throws MojoExecutionException;
 
+    void removeRabbitMq() throws MojoExecutionException;
+
     boolean isRabbitRunning() throws MojoExecutionException;
 
     void stop() throws MojoExecutionException;

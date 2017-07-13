@@ -1,8 +1,8 @@
 package com.github.iesen.rabbitmq.plugin.manager;
 
-import com.google.common.collect.Lists;
-import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugin.logging.Log;
+import static com.github.iesen.rabbitmq.plugin.RabbitMQConstants.ERLANG_HOME_WIN;
+import static com.github.iesen.rabbitmq.plugin.RabbitMQConstants.ERLANG_INSTALLER_FILE_NAME;
+import static com.github.iesen.rabbitmq.plugin.RabbitMQConstants.ERLANG_INSTALLER_URL;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -10,7 +10,11 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.List;
 
-import static com.github.iesen.rabbitmq.plugin.RabbitMQConstants.*;
+import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.logging.Log;
+
+import com.github.iesen.rabbitmq.plugin.RabbitMQConstants;
+import com.google.common.collect.Lists;
 
 /**
  *
@@ -25,7 +29,7 @@ public class WindowsRabbitManager implements RabbitManager {
 
     @Override
     public boolean rabbitExtracted() {
-        File rabbitHome = new File(RABBITMQ_HOME);
+        File rabbitHome = new File(RabbitMQConstants.getInstance().getRabbitMqHome());
         return rabbitHome.exists();
     }
 
@@ -37,16 +41,17 @@ public class WindowsRabbitManager implements RabbitManager {
             if (!erlangInstalled) {
                 installErlang();
             }
-            String rabbitDownloadUrl = "https://www.rabbitmq.com/releases/rabbitmq-server/v" + RABBITMQ_VERSION + "/rabbitmq-server-windows-" + RABBITMQ_VERSION + ".zip";
+            RabbitMQConstants rabbitMQConstants = RabbitMQConstants.getInstance();
+            String rabbitDownloadUrl = "https://www.rabbitmq.com/releases/rabbitmq-server/v" + rabbitMQConstants.getRabbitMqVersion() + "/rabbitmq-server-windows-" + rabbitMQConstants.getRabbitMqVersion() + ".zip";
             log.debug("Downloading rabbitmq from " + rabbitDownloadUrl);
-            FileUtils.download(rabbitDownloadUrl, RABBITMQ_PARENT_DIR + File.separator + "rabbitmq-server-windows-" + RABBITMQ_VERSION + ".zip");
+            FileUtils.download(rabbitDownloadUrl, rabbitMQConstants.getRabbitMqParentDir() + File.separator + "rabbitmq-server-windows-" + rabbitMQConstants.getRabbitMqVersion() + ".zip");
             log.debug("Extracting downloaded files");
-            FileUtils.extractZip(RABBITMQ_PARENT_DIR + File.separator + "rabbitmq-server-windows-" + RABBITMQ_VERSION + ".zip", RABBITMQ_PARENT_DIR);
+            FileUtils.extractZip(rabbitMQConstants.getRabbitMqParentDir() + File.separator + "rabbitmq-server-windows-" + rabbitMQConstants.getRabbitMqVersion() + ".zip", rabbitMQConstants.getRabbitMqParentDir());
             // Make folder invisible
-            ProcessBuilder invisibleCommand = new ProcessBuilder("attrib", "+h", RABBITMQ_PARENT_DIR);
+            ProcessBuilder invisibleCommand = new ProcessBuilder("attrib", "+h", rabbitMQConstants.getRabbitMqParentDir());
             invisibleCommand.start();
             // Enable management
-            ProcessBuilder managementEnabler = new ProcessBuilder(RABBITMQ_HOME + File.separator + "sbin" + File.separator + "rabbitmq-plugins.bat", "enable", "rabbitmq_management");
+            ProcessBuilder managementEnabler = new ProcessBuilder(rabbitMQConstants.getRabbitMqHome() + File.separator + "sbin" + File.separator + "rabbitmq-plugins.bat", "enable", "rabbitmq_management");
             managementEnabler.environment().put("ERLANG_HOME", ERLANG_HOME_WIN);
             log.debug("Enable management" + managementEnabler.command());
             Process managementProcess = managementEnabler.start();
@@ -66,18 +71,24 @@ public class WindowsRabbitManager implements RabbitManager {
     }
 
     @Override
+    public void removeRabbitMq() throws MojoExecutionException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public void installErlang() throws MojoExecutionException {
         try {
-            File installer = new File(RABBITMQ_PARENT_DIR + File.separator + ERLANG_INSTALLER_FILE_NAME);
+            RabbitMQConstants rabbitMQConstants = RabbitMQConstants.getInstance();
+            File installer = new File(rabbitMQConstants.getRabbitMqParentDir() + File.separator + ERLANG_INSTALLER_FILE_NAME);
             if (!installer.exists()) {
                 installer.getParentFile().mkdirs();
-                FileUtils.download(ERLANG_INSTALLER_URL, RABBITMQ_PARENT_DIR + File.separator + ERLANG_INSTALLER_FILE_NAME);
+                FileUtils.download(ERLANG_INSTALLER_URL, rabbitMQConstants.getRabbitMqParentDir() + File.separator + ERLANG_INSTALLER_FILE_NAME);
             }
             log.info("Executing erlang installer : " + "cmd /C start /B /BELOWNORMAL /WAIT " + ERLANG_INSTALLER_FILE_NAME + " /S");
             // Call installer
-            ProcessBuilder erlanginstallCommand = new ProcessBuilder("cmd", "/C", "start", "/B", "/BELOWNORMAL", "/WAIT", ERLANG_INSTALLER_FILE_NAME, "/S");
-            erlanginstallCommand.directory(new File(RABBITMQ_PARENT_DIR));
-            Process installProcess = erlanginstallCommand.start();
+            ProcessBuilder erlangInstallCommand = new ProcessBuilder("cmd", "/C", "start", "/B", "/BELOWNORMAL", "/WAIT", ERLANG_INSTALLER_FILE_NAME, "/S");
+            erlangInstallCommand.directory(new File(rabbitMQConstants.getRabbitMqParentDir()));
+            Process installProcess = erlangInstallCommand.start();
             int installResult = installProcess.waitFor();
             log.info("Erlang install result: " + installResult);
         } catch (IOException | InterruptedException e) {
@@ -95,11 +106,12 @@ public class WindowsRabbitManager implements RabbitManager {
     @Override
     public boolean isRabbitRunning() throws MojoExecutionException {
         try {
-            String rabbitctlPath = RABBITMQ_HOME + File.separator + "sbin" + File.separator + "rabbitmqctl.bat";
+            RabbitMQConstants rabbitMQConstants = RabbitMQConstants.getInstance();
+            String rabbitctlPath = rabbitMQConstants.getRabbitMqHome() + File.separator + "sbin" + File.separator + "rabbitmqctl.bat";
             if (!(new File(rabbitctlPath).exists())) {
                 throw new MojoExecutionException("RabbitMQ has not started yet");
             }
-            ProcessBuilder statusProcessBuilder = new ProcessBuilder(RABBITMQ_HOME + File.separator + "sbin" + File.separator + "rabbitmqctl.bat", "status");
+            ProcessBuilder statusProcessBuilder = new ProcessBuilder(rabbitMQConstants.getRabbitMqHome() + File.separator + "sbin" + File.separator + "rabbitmqctl.bat", "status");
             statusProcessBuilder.environment().put("ERLANG_HOME", ERLANG_HOME_WIN);
             Process statusProcess = statusProcessBuilder.start();
             String statusLine;
@@ -120,7 +132,8 @@ public class WindowsRabbitManager implements RabbitManager {
     @Override
     public void stop() throws MojoExecutionException {
         try {
-            String rabbitctlPath = RABBITMQ_HOME + File.separator + "sbin" + File.separator + "rabbitmqctl.bat";
+            RabbitMQConstants rabbitMQConstants = RabbitMQConstants.getInstance();
+            String rabbitctlPath = rabbitMQConstants.getRabbitMqHome() + File.separator + "sbin" + File.separator + "rabbitmqctl.bat";
             if (!(new File(rabbitctlPath).exists())) {
                 throw new MojoExecutionException("RabbitMQ is not started");
             }
@@ -145,7 +158,8 @@ public class WindowsRabbitManager implements RabbitManager {
     @Override
     public void start(String port, boolean detached) throws MojoExecutionException {
         try {
-            List<String> startCommand = Lists.newArrayList(RABBITMQ_HOME + File.separator + "sbin" + File.separatorChar + "rabbitmq-server.bat");
+            RabbitMQConstants rabbitMQConstants = RabbitMQConstants.getInstance();
+            List<String> startCommand = Lists.newArrayList(rabbitMQConstants.getRabbitMqHome() + File.separator + "sbin" + File.separatorChar + "rabbitmq-server.bat");
             if (detached) {
                 startCommand.add("-detached");
             }

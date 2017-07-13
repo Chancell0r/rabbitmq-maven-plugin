@@ -1,6 +1,8 @@
 package com.github.iesen.rabbitmq.plugin.api;
 
-import com.github.iesen.rabbitmq.plugin.api.model.BindingResource;
+import java.io.IOException;
+import java.util.List;
+
 import org.apache.commons.codec.binary.Base64;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpGet;
@@ -8,17 +10,17 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.Log;
-import retrofit.RequestInterceptor;
-import retrofit.RestAdapter;
-import retrofit.client.Response;
+
+import com.github.iesen.rabbitmq.plugin.api.model.BindingResource;
 import com.github.iesen.rabbitmq.plugin.api.model.ExchangeResource;
 import com.github.iesen.rabbitmq.plugin.api.model.QueueResource;
 import com.github.iesen.rabbitmq.plugin.mojo.parameter.Binding;
 import com.github.iesen.rabbitmq.plugin.mojo.parameter.Exchange;
 import com.github.iesen.rabbitmq.plugin.mojo.parameter.Queue;
 
-import java.io.IOException;
-import java.util.List;
+import retrofit.RequestInterceptor;
+import retrofit.RestAdapter;
+import retrofit.client.Response;
 
 /**
  * RabbitMQ Management operations implementation
@@ -83,7 +85,6 @@ public class RabbitMQRestClientImpl implements RabbitMQRestClient {
                 }
             }
         }
-
     }
 
     private boolean waitForManagementToStart() throws MojoExecutionException {
